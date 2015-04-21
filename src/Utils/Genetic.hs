@@ -4,6 +4,7 @@ module Genetic(geneticGen, stopf) where
 	import GeneticAlgorithm
 	import BSet
 	import Random
+	import qualified Data.Vector as V
 
 	stopf :: Float -> BSet -> Int -> Bool
 	stopf delta set gnum = gnum > 20 || delta > err set
@@ -11,7 +12,7 @@ module Genetic(geneticGen, stopf) where
 	randomIndividual :: RandomGen g => BParams -> Int -> g -> (BSet, g)
 	randomIndividual param d gen = 
 		let	(lst, gen') = randomInts (ring param) d gen
-		in (B (lst, param), gen')
+		in (B (V.fromList lst, param), gen')
 
 	geneticGen :: RandomGen g => BParams -> g -> (BSet -> Int -> Bool) -> (Int, Int) -> ([BSet], g)
 	geneticGen param gen stopf' (lowD, hightD) =

@@ -8,10 +8,11 @@ module Main where
 	import Generators
 	import Genetic
 	import Construct
+	import Bruteforse
 
 	main :: IO ()
 	main = do
 		gen <- newStdGen
-		--annealerGen (BParams (2^10) (calcCosList (2^10))) gen (68,68)
-		print (minimize (2^5) 0.06 (chooseGenetic gen (stopf 0.06)))
-		-- print $ calcConstruct (1523) 0.1
+		-- annealerGen (BParams (2^10) (calcCosList (2^10))) gen (68,68)
+		print (minimize (2^10) 0.01 (chooseGenetic gen (stopf 0.01)))
+	

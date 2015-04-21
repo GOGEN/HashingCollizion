@@ -6,6 +6,7 @@ module Annealer where
 	import Generators
 	import qualified Data.Array as A
 	import qualified Data.List as L
+	import qualified Data.Vector as V
 	import Helpers
 
 	getMaxForAllX' :: A.Array Int Float -> Int -> Float-> [Int] -> Float
@@ -31,10 +32,6 @@ module Annealer where
 	energyFunc :: Float -> BSet -> Bool
 	energyFunc delta set = delta > err set
 
-	-- perturbation :: BSet -> IO BSet
-	-- perturbation set = do
-	-- 	randomRIO (0,)
-
 	perturbation :: BSet -> IO BSet
 	perturbation set = do
 		gen <- newStdGen
@@ -42,8 +39,8 @@ module Annealer where
 
 	perturbation' :: RandomGen g => g -> BSet -> (BSet, g)
 	perturbation' g (B (xs, param)) =
-			let	(idx, g') = randomR (0, length xs - 1) g
+			let	(idx, g') = randomR (0, V.length xs - 1) g
 				(dx, g'') = randomR (-1, 1) g'
-				t = xs !! idx
-				xs' = take idx xs ++ [(t + dx)`mod`ring param] ++ drop (idx+1) xs
+				t = xs V.! idx
+				xs' = xs V.// [(idx, (t + dx)`mod`ring param)]
 			in (B (xs', param), g'')

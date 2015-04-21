@@ -3,6 +3,7 @@ module Helpers where
 	import Data.List
 	import Data.Array
 	import System.Random
+	import qualified Data.Vector as V
 
 	partialSum	:: Array Int Float -> Int -> [Int] -> Int -> Float
 	partialSum	cosList q xs x = 
@@ -14,29 +15,26 @@ module Helpers where
 		in  ( foldl' (\f s -> (+) f $ getCosVal s) 0 xs ) / convertInt deep
 		-- in (  sumList `seq` foldl' (+) 0 sumList ) / convertInt deep
 
-	partialSum'	:: Array Int Float -> Int -> Array Int Int -> Int -> Float
+	partialSum'	:: Array Int Float -> Int -> V.Vector Int -> Int -> Float
 	partialSum'	cosList q xs x = 
 		let	q'			= q `div` 2
 			getIndex	= \ind -> let ind' = ind `mod` q in if ind' > q' then abs (ind' - q) else ind'
 			getCosVal 	= \b -> cosList! getIndex (b*x)
-			deep 		= length (elems xs)
-			-- sumList		= map getCosVal xs `using` parList rdeepseq
-		in  ( foldl' (\f s -> (+) f $ getCosVal s) 0 (elems xs) ) / convertInt deep
-		-- in (  sumList `seq` foldl' (+) 0 sumList ) / convertInt deep
+			deep 		= V.length xs
+		in  ( V.foldl' (\f s -> (+) f $ getCosVal s) 0 xs ) / convertInt deep
 
-
-	getMaxForAllX :: Array Int Float -> Int -> Float-> [Int] -> Float
+	getMaxForAllX :: Array Int Float -> Int -> Float-> V.Vector Int -> Float
 	getMaxForAllX cosList q prevDelta xs = 
-		let	partSum 	= partialSum cosList q
+		let	partSum 	= partialSum' cosList q
 			ring		= [1..q `div` 2]
 		in foldl' (\f s -> if f < prevDelta then max f (abs $ partSum xs s) else 1.0) 0 ring
 
-	findBetter :: Array Int Float -> Int -> Float -> [[Int]] -> ([Int], Float)
+	findBetter :: Array Int Float -> Int -> Float -> [V.Vector Int] -> (V.Vector Int, Float)
 	findBetter cosList q delta xs = foldl'
 		(\(prevLst, prevD) lst -> 
 			let currD = getMaxForAllX cosList q prevD lst
 			in if currD > prevD then (prevLst, prevD) else (lst, currD))
-		([], delta)
+		(V.fromList [], delta)
 		xs
 
 	getLowerBound :: Int -> Int
@@ -74,8 +72,6 @@ module Helpers where
 	                 (s, t, g) = gcdExt b r
 	             in (t, s - q * t, g)
 	 
-	-- Given a and m, return Just x such that ax = 1 mod m.  If there is no such x
-	-- return Nothing.
 	modInv :: Int -> Int -> Maybe Int
 	modInv a m = let (i, _, g) = gcdExt a m
 	             in if g == 1 then Just (mkPos i) else Nothing

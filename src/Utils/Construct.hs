@@ -3,6 +3,7 @@ module Construct where
 	import Helpers
 	import Data.Numbers.Primes
 	import Data.Maybe
+	import qualified Data.Vector as V
 
 	calcP :: Int -> Float -> [Int]
 	calcP p e = 
@@ -12,17 +13,17 @@ module Construct where
 		in filter isPrime [lowBound..hightBound]
 
 	calcS :: Int -> Float -> [Int]
-	calcS p e = [1.. round $ (log $ convertInt p) ** (1+2.0*e)]
+	calcS p e = [1.. floor $ (log $ convertInt p) ** (1+2.0*e)]
 
 	calcTheoryBound :: Int -> Float -> Int -> Float
 	calcTheoryBound p e len = (log $ convertInt p) ** (-e) * convertInt len
 
-	calcConstruct :: Int -> Float -> (Float, Float, [Int])
+	calcConstruct :: Int -> Float -> (Float, Float, V.Vector Int)
 	calcConstruct p e =
 		let	pSet	= calcP p e
 			sSet 	= calcS p e
-			set = [ (s * fromJust (modInv r p)) `mod` p | r <- pSet, s <- sSet]
+			set = V.fromList [ (s * fromJust (modInv r p)) `mod` p | r <- pSet, s <- sSet]
 			cosList = calcCosList p
-		in (calcTheoryBound p e (length set),
+		in (calcTheoryBound p e (V.length set),
 				getMaxForAllX cosList p 1.0 set,
 				set)
