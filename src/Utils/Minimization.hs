@@ -10,10 +10,10 @@ module Minimization where
 
 	minimize :: Int -> Float -> ChooseMethod -> Maybe Result
 	minimize q delta choose =
-		let	lowerD			= getLowerBound q
+		let	lowerD			= getLowerBound q delta
 			param 			= BParams q (calcCosList q)
 			getMax			= getMaxForAllX (cosList param) q
-			bSets			= getBSet param (lowerD, q) choose
+			bSets			= getBSet param (100, q) choose
 			result'			= L.scanl 
 				(\(prevD, prevB) (B (xs, param)) ->
 					let	currD = getMax prevD xs in

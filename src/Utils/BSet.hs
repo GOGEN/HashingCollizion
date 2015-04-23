@@ -28,10 +28,8 @@ module BSet where
 		crossover g Null _ = ([Null], g)
 		crossover g _ Null = ([Null], g)
 		crossover g (B (xs1, param)) (B (xs2, _)) =
-			let	(idx, g') = randomR (0, V.length xs1 - 1) g
-				xs1' = V.take idx xs1
-				xs2' = V.drop idx xs2
-				xs   = xs1' V.++ xs2'
+			let	(idx, g') = randomR (1, V.length xs1 - 1) g
+				xs   = xs1 V.// L.zip [0..idx-1] (L.take idx $ V.toList xs2)
 			in ([B (xs, param)], g')
 
 		mutation g Null = (Null, g)

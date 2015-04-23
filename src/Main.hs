@@ -13,6 +13,5 @@ module Main where
 	main :: IO ()
 	main = do
 		gen <- newStdGen
-		-- annealerGen (BParams (2^10) (calcCosList (2^10))) gen (68,68)
-		print (minimize (2^10) 0.01 (chooseGenetic gen (stopf 0.01)))
-	
+		print (minimize (2^10) 0.01 chooseBruteforse)
+		-- work $ Params 4 1000000 10000 (2^5) 0.06 17

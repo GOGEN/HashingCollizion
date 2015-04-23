@@ -9,7 +9,7 @@ module Helpers where
 	partialSum	cosList q xs x = 
 		let	q'			= q `div` 2
 			getIndex	= \ind -> let ind' = ind `mod` q in if ind' > q' then abs (ind' - q) else ind'
-			getCosVal 	= \b -> cosList! getIndex (b*x)
+			getCosVal 	= \b -> cosList! (b*x `mod` q)
 			deep 		= length xs
 			-- sumList		= map getCosVal xs `using` parList rdeepseq
 		in  ( foldl' (\f s -> (+) f $ getCosVal s) 0 xs ) / convertInt deep
@@ -37,8 +37,8 @@ module Helpers where
 		(V.fromList [], delta)
 		xs
 
-	getLowerBound :: Int -> Int
-	getLowerBound  q = round . log . convertInt $ q
+	getLowerBound :: Int -> Float -> Int
+	getLowerBound q _ = round . log . convertInt $ q
 
 	getHightBound :: Int -> Float -> Int
 	getHightBound q delta = min q $ round ((2.0 * (log . convertInt $ (2 * q))) / delta / delta)
@@ -64,7 +64,7 @@ module Helpers where
 	    in (x:xs, gennn)
 
 	calcCosList :: Int -> Array Int Float
-	calcCosList q = array (0, q `div` 2) [ (q', cos (2.0 * pi * (convertInt q') / (convertInt q) )) | q' <- [0..q `div` 2] ]
+	calcCosList q = array (0, q) [ (q', cos (2.0 * pi * (convertInt q') / (convertInt q) )) | q' <- [0..q] ]
 
 	gcdExt :: Int -> Int -> (Int, Int, Int)
 	gcdExt a 0 = (1, 0, a)

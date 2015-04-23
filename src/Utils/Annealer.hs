@@ -2,45 +2,45 @@ module Annealer where
 
 	import Control.Concurrent.Annealer
 	import System.Random
-	import BSet
-	import Generators
-	import qualified Data.Array as A
-	import qualified Data.List as L
-	import qualified Data.Vector as V
 	import Helpers
+	import Control.Monad
+	import Control.Monad.Random
 
-	getMaxForAllX' :: A.Array Int Float -> Int -> Float-> [Int] -> Float
-	getMaxForAllX' cosList q prevDelta xs = 
-		let	partSum 	= partialSum cosList q
-			ring		= [1..q `div` 2]
-		in L.foldl' (\f s -> if f < prevDelta then max f (abs $ partSum xs s) else 1.0) 0 ring
+	import qualified Data.Array as A
+	import qualified Data.IntSet as IS
+	import qualified Data.Vector as V
 
-	annealerGen :: RandomGen g => BParams -> g -> (Int, Int) -> IO ()
-	annealerGen param gen (lowD, _) =
-		let	initPop 	= getBSet param (lowD, lowD) (chooseRandom gen)
-		in do
-			print $ length initPop
-			initAnn <- initAnnealer initPop err 10000 perturbation
-			best <- getBestState initAnn
-			print best
-			print $ err best
-			-- offerState best initAnn
-			set <- annealForTime 40 1000000 initAnn
-			print set
-			print $ err set
+	data Params = Params { 	threads :: Int
+							, time :: Int
+							, len :: Int
+							, m :: Int
+							, eps :: Double
+							, t :: Int } deriving (Show, Eq)
 
-	energyFunc :: Float -> BSet -> Bool
-	energyFunc delta set = delta > err set
+	type State  = V.Vector Int
+	type Energy = Float
 
-	perturbation :: BSet -> IO BSet
-	perturbation set = do
-		gen <- newStdGen
-		return ( fst (perturbation' gen set))
+	energy :: A.Array Int Float -> Int -> State -> Energy
+	energy cosList m state = getMaxForAllX cosList m 1.0 state
 
-	perturbation' :: RandomGen g => g -> BSet -> (BSet, g)
-	perturbation' g (B (xs, param)) =
-			let	(idx, g') = randomR (0, V.length xs - 1) g
-				(dx, g'') = randomR (-1, 1) g'
-				t = xs V.! idx
-				xs' = xs V.// [(idx, (t + dx)`mod`ring param)]
-			in (B (xs', param), g'')
+	swap :: Int -> Int -> State -> State
+	swap j x state = state V.// [(j,x)]
+
+	change t m state = do
+		(j, x) <- evalRandIO $ do
+			j <- getRandomR (0, t-1)
+			x <- getRandomR (0, m-1)
+			return (j,x)
+		return $ swap j x state
+
+	randomState :: (RandomGen g) => Int -> Int -> Rand g State
+	randomState t m = liftM (V.fromList . take t) $ sequence $ replicate t $ getRandomR (0, m-1)
+
+	work p = do
+		let cosList = calcCosList (m p)
+		initial <- evalRandIO $ sequence $ replicate (len p) $ randomState (t p) (m p)
+		annealer <- initAnnealer initial (energy cosList (m p)) (length initial) (change (t p) (m p))
+		best <- annealForTime (threads p) (time p) annealer
+		print (V.toList best, energy cosList (m p) best, p)
+
+	getT m eps = round $ 2/eps*log (fromIntegral $ 2*m) + 1
